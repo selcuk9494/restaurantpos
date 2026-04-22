@@ -1,0 +1,105 @@
+{
+  "name": "@resto/device-agent",
+  "description": "Resto Platform cihaz ajani ve Windows-native device runtime",
+  "author": "Selcuk Yilmaz",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "main": "dist-electron/electron/main.js",
+  "scripts": {
+    "dev:web": "vite",
+    "dev:electron": "tsc -p tsconfig.electron.json && wait-on tcp:5173 && electron .",
+    "dev": "concurrently -k \"pnpm:dev:web\" \"pnpm:dev:electron\"",
+    "build:renderer": "tsc -b && vite build",
+    "build:electron": "tsc -p tsconfig.electron.json",
+    "build:ingenico-worker": "dotnet build ./ingenico-worker/IngenicoWorker.csproj",
+    "publish:ingenico-worker:win-x64": "dotnet publish ./ingenico-worker/IngenicoWorker.csproj -c Release -r win-x64 --self-contained false -o ./ingenico-worker/build/win-x64",
+    "publish:ingenico-worker:win-arm64": "dotnet publish ./ingenico-worker/IngenicoWorker.csproj -c Release -r win-arm64 --self-contained false -o ./ingenico-worker/build/win-arm64",
+    "build": "pnpm run build:renderer && pnpm run build:electron && pnpm run build:ingenico-worker",
+    "typecheck": "tsc -b && tsc -p tsconfig.electron.json --noEmit",
+    "start": "electron .",
+    "dist:win": "pnpm run dist:win:all",
+    "dist:win:x64": "pnpm run publish:ingenico-worker:win-x64 && pnpm run build && electron-builder --win portable --x64 --config.directories.output=release/win-x64",
+    "dist:win:arm64": "pnpm run publish:ingenico-worker:win-arm64 && pnpm run build && electron-builder --win portable --arm64 --config.directories.output=release/win-arm64",
+    "dist:win:all": "pnpm run dist:win:x64 && pnpm run dist:win:arm64",
+    "dist:mac": "pnpm run build && electron-builder --mac zip --arm64 --config.mac.identity=null --config.directories.output=release/mac",
+    "dist:mac:dir": "pnpm run build && electron-builder --mac dir --arm64 --config.mac.identity=null --config.directories.output=release/mac-dir",
+    "dist:mac:x64": "pnpm run build && electron-builder --mac zip --x64 --config.mac.identity=null --config.directories.output=release/mac-x64",
+    "dist:mac:signed": "pnpm run build && electron-builder --mac zip --arm64 --config.directories.output=release/mac-signed",
+    "dist:mac:x64:signed": "pnpm run build && electron-builder --mac zip --x64 --config.directories.output=release/mac-x64-signed"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.99.2",
+    "axios": "^1.15.1",
+    "chokidar": "^4.0.3",
+    "concurrently": "^9.2.1",
+    "iconv-lite": "^0.7.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-hook-form": "^7.72.1",
+    "react-router-dom": "^7.14.1",
+    "readdirp": "^4.1.2",
+    "wait-on": "^8.0.5",
+    "zod": "^4.3.6",
+    "zustand": "^5.0.12"
+  },
+  "devDependencies": {
+    "@electron/notarize": "^2.2.1",
+    "@types/node": "^25.6.0",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@typescript-eslint/eslint-plugin": "^7.15.0",
+    "@typescript-eslint/parser": "^7.15.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "electron": "^28.3.3",
+    "electron-builder": "^24.13.3",
+    "eslint": "^8.57.0",
+    "eslint-plugin-react-hooks": "^4.6.2",
+    "eslint-plugin-react-refresh": "^0.4.7",
+    "typescript": "^5.2.2",
+    "vite": "^5.3.4"
+  },
+  "build": {
+    "appId": "com.selcukyilmaz.resto.deviceagent",
+    "productName": "Resto Device Agent",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*",
+      "build-resources/**/*",
+      "ingenico-runtime/**/*",
+      "ingenico-worker/build/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "ingenico-runtime",
+        "to": "ingenico-runtime"
+      },
+      {
+        "from": "ingenico-worker/build",
+        "to": "ingenico-worker/build"
+      }
+    ],
+    "win": {
+      "target": [
+        "portable"
+      ],
+      "icon": "build-resources/icon.ico",
+      "artifactName": "resto-device-agent-${version}-${arch}.exe"
+    },
+    "mac": {
+      "target": [
+        "zip"
+      ],
+      "category": "public.app-category.business",
+      "icon": "build-resources/icon.icns",
+      "artifactName": "resto-device-agent-${version}-${arch}.${ext}",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false
+    },
+    "afterSign": "scripts/notarize.cjs"
+  }
+}

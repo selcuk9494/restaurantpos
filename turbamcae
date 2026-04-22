@@ -1,0 +1,14 @@
+pnpm-lock.yaml
+.prisma
+EOF
+
+cat > .env.example <<'EOF'
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/resto
+JWT_SECRET=change_me
+JWT_REFRESH_SECRET=change_me_too
+REDIS_URL=redis://localhost:6379
+EOF
+
+pnpm install
+ls
+

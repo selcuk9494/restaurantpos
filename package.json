@@ -1,0 +1,26 @@
+{
+  "name": "resto-platform",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@9.0.0",
+  "scripts": {
+    "dev": "turbo run dev --parallel",
+    "build": "turbo run build",
+    "build:device-agent": "pnpm --filter @resto/device-agent build",
+    "dist:device-agent:mac": "pnpm --filter @resto/device-agent dist:mac",
+    "dist:device-agent:mac:x64": "pnpm --filter @resto/device-agent dist:mac:x64",
+    "dist:device-agent:win:x64": "pnpm --filter @resto/device-agent dist:win:x64",
+    "dist:device-agent:win:arm64": "pnpm --filter @resto/device-agent dist:win:arm64",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck",
+    "format": "prettier --write .",
+    "dist:device-agent:mac:signed": "pnpm --filter @resto/device-agent dist:mac:signed",
+    "dist:device-agent:mac:x64:signed": "pnpm --filter @resto/device-agent dist:mac:x64:signed"
+  },
+  "devDependencies": {
+    "prettier": "^3.3.0",
+    "turbo": "^2.0.0",
+    "typescript": "^5.5.0"
+  }
+}
