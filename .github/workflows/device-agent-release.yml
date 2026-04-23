@@ -98,9 +98,6 @@ jobs:
   win-x64:
     if: github.event_name == 'push' || inputs.build_win_x64
     runs-on: windows-2022
-    env:
-      CSC_LINK: ${{ secrets.WIN_CSC_LINK != '' && secrets.WIN_CSC_LINK || secrets.CSC_LINK }}
-      CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD != '' && secrets.WIN_CSC_KEY_PASSWORD || secrets.CSC_KEY_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -112,7 +109,21 @@ jobs:
         with:
           dotnet-version: 8.0.x
       - run: pnpm install --frozen-lockfile
-      - run: pnpm dist:device-agent:win:x64
+      - name: Build Windows x64 artifact
+        shell: pwsh
+        env:
+          WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+          WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+        run: |
+          if ($env:WIN_CSC_LINK) {
+            $env:CSC_LINK = $env:WIN_CSC_LINK
+            $env:CSC_KEY_PASSWORD = $env:WIN_CSC_KEY_PASSWORD
+          } elseif (-not $env:CSC_LINK) {
+            $env:CSC_IDENTITY_AUTO_DISCOVERY = "false"
+          }
+          pnpm dist:device-agent:win:x64
       - uses: actions/upload-artifact@v4
         with:
           name: device-agent-win-x64
@@ -121,9 +132,6 @@ jobs:
   win-arm64:
     if: github.event_name == 'push' || inputs.build_win_arm64
     runs-on: windows-2022
-    env:
-      CSC_LINK: ${{ secrets.WIN_CSC_LINK != '' && secrets.WIN_CSC_LINK || secrets.CSC_LINK }}
-      CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD != '' && secrets.WIN_CSC_KEY_PASSWORD || secrets.CSC_KEY_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -135,7 +143,21 @@ jobs:
         with:
           dotnet-version: 8.0.x
       - run: pnpm install --frozen-lockfile
-      - run: pnpm dist:device-agent:win:arm64
+      - name: Build Windows arm64 artifact
+        shell: pwsh
+        env:
+          WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+          WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+        run: |
+          if ($env:WIN_CSC_LINK) {
+            $env:CSC_LINK = $env:WIN_CSC_LINK
+            $env:CSC_KEY_PASSWORD = $env:WIN_CSC_KEY_PASSWORD
+          } elseif (-not $env:CSC_LINK) {
+            $env:CSC_IDENTITY_AUTO_DISCOVERY = "false"
+          }
+          pnpm dist:device-agent:win:arm64
       - uses: actions/upload-artifact@v4
         with:
           name: device-agent-win-arm64
