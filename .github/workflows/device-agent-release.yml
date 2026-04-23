@@ -112,15 +112,22 @@ jobs:
       - name: Build Windows x64 artifact
         shell: pwsh
         env:
-          WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
-          WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
-          CSC_LINK: ${{ secrets.CSC_LINK }}
-          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          INPUT_WIN_CERT_LINK: ${{ secrets.WIN_CSC_LINK }}
+          INPUT_WIN_CERT_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+          INPUT_CSC_LINK: ${{ secrets.CSC_LINK }}
+          INPUT_CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
         run: |
-          if ($env:WIN_CSC_LINK) {
-            $env:CSC_LINK = $env:WIN_CSC_LINK
-            $env:CSC_KEY_PASSWORD = $env:WIN_CSC_KEY_PASSWORD
-          } elseif (-not $env:CSC_LINK) {
+          Remove-Item Env:WIN_CSC_LINK -ErrorAction SilentlyContinue
+          Remove-Item Env:WIN_CSC_KEY_PASSWORD -ErrorAction SilentlyContinue
+          if ($env:INPUT_WIN_CERT_LINK) {
+            $env:CSC_LINK = $env:INPUT_WIN_CERT_LINK
+            $env:CSC_KEY_PASSWORD = $env:INPUT_WIN_CERT_PASSWORD
+          } elseif ($env:INPUT_CSC_LINK) {
+            $env:CSC_LINK = $env:INPUT_CSC_LINK
+            $env:CSC_KEY_PASSWORD = $env:INPUT_CSC_KEY_PASSWORD
+          } else {
+            Remove-Item Env:CSC_LINK -ErrorAction SilentlyContinue
+            Remove-Item Env:CSC_KEY_PASSWORD -ErrorAction SilentlyContinue
             $env:CSC_IDENTITY_AUTO_DISCOVERY = "false"
           }
           pnpm dist:device-agent:win:x64
@@ -146,15 +153,22 @@ jobs:
       - name: Build Windows arm64 artifact
         shell: pwsh
         env:
-          WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
-          WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
-          CSC_LINK: ${{ secrets.CSC_LINK }}
-          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          INPUT_WIN_CERT_LINK: ${{ secrets.WIN_CSC_LINK }}
+          INPUT_WIN_CERT_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+          INPUT_CSC_LINK: ${{ secrets.CSC_LINK }}
+          INPUT_CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
         run: |
-          if ($env:WIN_CSC_LINK) {
-            $env:CSC_LINK = $env:WIN_CSC_LINK
-            $env:CSC_KEY_PASSWORD = $env:WIN_CSC_KEY_PASSWORD
-          } elseif (-not $env:CSC_LINK) {
+          Remove-Item Env:WIN_CSC_LINK -ErrorAction SilentlyContinue
+          Remove-Item Env:WIN_CSC_KEY_PASSWORD -ErrorAction SilentlyContinue
+          if ($env:INPUT_WIN_CERT_LINK) {
+            $env:CSC_LINK = $env:INPUT_WIN_CERT_LINK
+            $env:CSC_KEY_PASSWORD = $env:INPUT_WIN_CERT_PASSWORD
+          } elseif ($env:INPUT_CSC_LINK) {
+            $env:CSC_LINK = $env:INPUT_CSC_LINK
+            $env:CSC_KEY_PASSWORD = $env:INPUT_CSC_KEY_PASSWORD
+          } else {
+            Remove-Item Env:CSC_LINK -ErrorAction SilentlyContinue
+            Remove-Item Env:CSC_KEY_PASSWORD -ErrorAction SilentlyContinue
             $env:CSC_IDENTITY_AUTO_DISCOVERY = "false"
           }
           pnpm dist:device-agent:win:arm64
