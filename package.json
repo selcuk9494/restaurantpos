@@ -19,7 +19,10 @@
     "dist:device-agent:mac:x64:signed": "pnpm --filter @resto/device-agent dist:mac:x64:signed",
     "dev:pos-stack": "turbo run dev --filter=@resto/api --filter=pos-web",
     "dev:api": "pnpm --filter @resto/api dev",
-    "dev:pos-web": "pnpm --filter pos-web dev"
+    "dev:pos-web": "pnpm --filter pos-web dev",
+    "dev:pos-desktop": "pnpm --filter pos-web dev",
+    "dist:pos:mac": "pnpm --filter pos-web dist:mac",
+    "dist:pos:mac:dir": "pnpm --filter pos-web dist:mac:dir"
   },
   "devDependencies": {
     "prettier": "^3.3.0",

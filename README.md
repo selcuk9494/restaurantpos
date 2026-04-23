@@ -44,3 +44,16 @@ pnpm dist:device-agent:win:x64
 
 - Kullaniciya tek urun hissi veren ana repo `resto-platform`tur
 - `device-agent` ayri urun degil, ana sistemin cihaz ve runtime parcasi olarak konumlanir
+
+## Mac'te POS Desktop
+
+```bash
+pnpm dist:pos:mac
+```
+
+Desktop uygulamasi `apps/pos-web/release/mac/` altina cikar. Gelistirme modunda masaustu acmak icin:
+
+```bash
+pnpm dev:pos-desktop
+```
+

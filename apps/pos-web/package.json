@@ -4,19 +4,56 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --host 0.0.0.0 --port 4173",
-    "build": "tsc -b && vite build",
-    "typecheck": "tsc -b"
+    "dev": "concurrently -k \"pnpm:dev:web\" \"pnpm:dev:electron\"",
+    "build": "pnpm run build:renderer && pnpm run build:electron",
+    "typecheck": "tsc -b && tsc -p tsconfig.electron.json --noEmit",
+    "dev:web": "vite --host 0.0.0.0 --port 4173",
+    "dev:electron": "tsc -p tsconfig.electron.json && wait-on tcp:4173 && VITE_DEV_SERVER_URL=http://127.0.0.1:4173 electron .",
+    "build:renderer": "tsc -b && vite build",
+    "build:electron": "tsc -p tsconfig.electron.json",
+    "start": "electron .",
+    "dist:mac": "pnpm run build && electron-builder --mac zip --arm64 --config.mac.identity=null --config.directories.output=release/mac",
+    "dist:mac:dir": "pnpm run build && electron-builder --mac dir --arm64 --config.mac.identity=null --config.directories.output=release/mac-dir"
   },
   "dependencies": {
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@types/node": "^25.6.0",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
+    "concurrently": "^9.2.1",
+    "electron": "^28.3.3",
+    "electron-builder": "^24.13.3",
     "typescript": "^5.5.4",
-    "vite": "^5.4.2"
-  }
+    "vite": "^5.4.2",
+    "wait-on": "^8.0.5"
+  },
+  "main": "dist-electron/electron/main.js",
+  "build": {
+    "appId": "com.selcukyilmaz.resto.pos",
+    "productName": "Resto POS",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "target": [
+        "zip"
+      ],
+      "category": "public.app-category.business",
+      "artifactName": "resto-pos-${version}-${arch}.${ext}",
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false,
+      "icon": "../device-agent/build-resources/icon.icns"
+    }
+  },
+  "description": "Resto Platform POS masaustu uygulamasi",
+  "author": "Selcuk Yilmaz"
 }
