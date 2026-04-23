@@ -57,3 +57,13 @@ Desktop uygulamasi `apps/pos-web/release/mac/` altina cikar. Uygulama acilirken 
 pnpm dev:pos-desktop
 ```
 
+
+## POS Desktop Release
+
+```bash
+git tag pos-v0.1.0
+git push origin pos-v0.1.0
+```
+
+Bu tag `POS Desktop Release` workflow'unu tetikler ve `resto-pos-*-arm64.zip` paketini GitHub Releases'a yukler.
+
