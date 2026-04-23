@@ -50,6 +50,9 @@ importers:
       readdirp:
         specifier: ^4.1.2
         version: 4.1.2
+      safer-buffer:
+        specifier: ^2.1.2
+        version: 2.1.2
       wait-on:
         specifier: ^8.0.5
         version: 8.0.5
