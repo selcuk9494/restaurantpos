@@ -58,8 +58,8 @@ jobs:
         with:
           name: device-agent-mac-arm64
           path: |
-            apps/device-agent/release/mac/**/*.zip
-            apps/device-agent/release/mac-signed/**/*.zip
+            apps/device-agent/release/mac/resto-device-agent-*-arm64.zip
+            apps/device-agent/release/mac-signed/resto-device-agent-*-arm64.zip
 
   mac-x64:
     if: github.event_name == 'workflow_dispatch' && inputs.build_mac_x64
@@ -92,8 +92,8 @@ jobs:
         with:
           name: device-agent-mac-x64
           path: |
-            apps/device-agent/release/mac-x64/**/*.zip
-            apps/device-agent/release/mac-x64-signed/**/*.zip
+            apps/device-agent/release/mac-x64/resto-device-agent-*-x64.zip
+            apps/device-agent/release/mac-x64-signed/resto-device-agent-*-x64.zip
 
   win-x64:
     if: github.event_name == 'push' || inputs.build_win_x64
@@ -134,7 +134,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: device-agent-win-x64
-          path: apps/device-agent/release/win-x64/**/*.exe
+          path: apps/device-agent/release/win-x64/resto-device-agent-*-x64.exe
 
   win-arm64:
     if: github.event_name == 'push' || inputs.build_win_arm64
@@ -175,7 +175,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: device-agent-win-arm64
-          path: apps/device-agent/release/win-arm64/**/*.exe
+          path: apps/device-agent/release/win-arm64/resto-device-agent-*-arm64.exe
 
   github-release:
     if: startsWith(github.ref, 'refs/tags/device-agent-v')
