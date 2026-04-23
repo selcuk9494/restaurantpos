@@ -16,7 +16,10 @@
     "typecheck": "turbo run typecheck",
     "format": "prettier --write .",
     "dist:device-agent:mac:signed": "pnpm --filter @resto/device-agent dist:mac:signed",
-    "dist:device-agent:mac:x64:signed": "pnpm --filter @resto/device-agent dist:mac:x64:signed"
+    "dist:device-agent:mac:x64:signed": "pnpm --filter @resto/device-agent dist:mac:x64:signed",
+    "dev:pos-stack": "turbo run dev --filter=@resto/api --filter=pos-web",
+    "dev:api": "pnpm --filter @resto/api dev",
+    "dev:pos-web": "pnpm --filter pos-web dev"
   },
   "devDependencies": {
     "prettier": "^3.3.0",
