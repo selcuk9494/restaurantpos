@@ -40,8 +40,86 @@ type Order = {
   items: OrderItem[];
   payments?: Payment[];
 };
+type AuthRole = { id: string; code: string; name: string };
+type AuthPermission = { id: string; code: string; name: string };
+type AuthUser = {
+  id: string;
+  email: string;
+  fullName?: string | null;
+  roles: AuthRole[];
+  permissions: AuthPermission[];
+};
+type StoredAuth = { accessToken: string; user: AuthUser };
+type LoginResponse = StoredAuth;
 
 const API = "http://localhost:3000/v1";
+const AUTH_STORAGE_KEY = "resto-pos-auth";
+
+let authToken = "";
+
+const setAuthToken = (token: string) => {
+  authToken = token;
+};
+
+const readStoredAuth = () => {
+  if (typeof window === "undefined") return null;
+
+  const raw = window.localStorage.getItem(AUTH_STORAGE_KEY);
+  if (!raw) return null;
+
+  try {
+    return JSON.parse(raw) as StoredAuth;
+  } catch {
+    window.localStorage.removeItem(AUTH_STORAGE_KEY);
+    return null;
+  }
+};
+
+const persistAuth = (value: StoredAuth | null) => {
+  if (typeof window === "undefined") return;
+
+  if (value) {
+    window.localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(value));
+    return;
+  }
+
+  window.localStorage.removeItem(AUTH_STORAGE_KEY);
+};
+
+const readErrorMessage = async (response: Response, fallback: string) => {
+  try {
+    const data = (await response.json()) as { message?: string | string[] };
+    if (Array.isArray(data.message)) return data.message.join(", ");
+    if (data.message) return data.message;
+  } catch {
+    // Ignore parse failures and fall back to the generic message.
+  }
+
+  return fallback;
+};
+
+const request = async <T,>(path: string, init: RequestInit = {}) => {
+  const headers = new Headers(init.headers);
+  if (init.body && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+  if (authToken) {
+    headers.set("Authorization", `Bearer ${authToken}`);
+  }
+
+  const response = await fetch(API + path, {
+    ...init,
+    headers,
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      await readErrorMessage(response, `${init.method ?? "GET"} failed: ${path}`),
+    );
+  }
+
+  return response.json() as Promise<T>;
+};
 
 const money = new Intl.NumberFormat("tr-TR", {
   style: "currency",
@@ -49,21 +127,13 @@ const money = new Intl.NumberFormat("tr-TR", {
   maximumFractionDigits: 0,
 });
 
-const get = async <T,>(path: string) => {
-  const response = await fetch(API + path);
-  if (response.status >= 400) throw new Error("GET failed: " + path);
-  return response.json() as Promise<T>;
-};
+const get = async <T,>(path: string) => request<T>(path);
 
-const post = async <T,>(path: string, body: unknown) => {
-  const response = await fetch(API + path, {
+const post = async <T,>(path: string, body: unknown) =>
+  request<T>(path, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-  if (response.status >= 400) throw new Error("POST failed: " + path);
-  return response.json() as Promise<T>;
-};
 
 export default function App() {
   const [tables, setTables] = useState<Table[]>([]);
@@ -78,6 +148,20 @@ export default function App() {
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
+  const [auth, setAuth] = useState<StoredAuth | null>(() => {
+    const stored = readStoredAuth();
+    if (stored?.accessToken) setAuthToken(stored.accessToken);
+    return stored;
+  });
+  const [authChecking, setAuthChecking] = useState(() =>
+    Boolean(readStoredAuth()?.accessToken),
+  );
+  const [loginEmail, setLoginEmail] = useState(
+    () => readStoredAuth()?.user.email ?? "admin@resto.local",
+  );
+  const [loginPassword, setLoginPassword] = useState("Admin123!");
+  const [loginBusy, setLoginBusy] = useState(false);
+  const [loginError, setLoginError] = useState("");
 
   const loadOperationalData = async () => {
     const [kitchenData, ordersData] = await Promise.all([
@@ -111,6 +195,46 @@ export default function App() {
   };
 
   useEffect(() => {
+    if (!auth?.accessToken) {
+      setAuthToken("");
+      setAuthChecking(false);
+      return;
+    }
+
+    let active = true;
+    setAuthToken(auth.accessToken);
+    setAuthChecking(true);
+
+    void get<AuthUser>("/auth/me")
+      .then((user) => {
+        if (!active) return;
+        const nextAuth = { accessToken: auth.accessToken, user };
+        persistAuth(nextAuth);
+        setAuth(nextAuth);
+        setLoginEmail(user.email);
+        setLoginError("");
+      })
+      .catch(() => {
+        if (!active) return;
+        setAuthToken("");
+        persistAuth(null);
+        setAuth(null);
+        setNotice("");
+        setError("");
+        setLoginError("Oturum suresi doldu. Lutfen tekrar giris yap.");
+      })
+      .finally(() => {
+        if (active) setAuthChecking(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [auth?.accessToken]);
+
+  useEffect(() => {
+    if (!auth?.accessToken || authChecking) return;
+
     void load().catch((err: unknown) =>
       setError(err instanceof Error ? err.message : "Yukleme hatasi"),
     );
@@ -118,7 +242,7 @@ export default function App() {
       void load().catch(() => undefined);
     }, 15000);
     return () => window.clearInterval(timer);
-  }, []);
+  }, [auth?.accessToken, authChecking]);
 
   const selectedTable = useMemo(
     () => tables.find((table) => table.id === selectedTableId) ?? null,
@@ -365,6 +489,47 @@ export default function App() {
     setActiveSubTab("primary");
   }, [salesMode]);
 
+  const resetOperationalState = () => {
+    setTables([]);
+    setProducts([]);
+    setKitchen([]);
+    setSales(null);
+    setSessions([]);
+    setOrders([]);
+    setSelectedTableId(null);
+    setNotice("");
+    setError("");
+  };
+
+  const handleLogin = async () => {
+    try {
+      setLoginBusy(true);
+      setLoginError("");
+      const nextAuth = await post<LoginResponse>("/auth/login", {
+        email: loginEmail,
+        password: loginPassword,
+      });
+      setAuthToken(nextAuth.accessToken);
+      persistAuth(nextAuth);
+      setAuth(nextAuth);
+      setNotice("");
+      setError("");
+    } catch (err: unknown) {
+      setLoginError(err instanceof Error ? err.message : "Giris yapilamadi");
+    } finally {
+      setLoginBusy(false);
+    }
+  };
+
+  const handleLogout = () => {
+    setAuthToken("");
+    persistAuth(null);
+    setAuth(null);
+    setAuthChecking(false);
+    setLoginError("");
+    resetOperationalState();
+  };
+
   const runAction = async (action: () => Promise<void>) => {
     try {
       setBusy(true);
@@ -494,6 +659,71 @@ export default function App() {
     });
   };
 
+  const currentUserName = auth?.user.fullName || auth?.user.email || "Kasa";
+  const currentUserRole = auth?.user.roles[0]?.name ?? "Yetkili Kullanici";
+
+  if (authChecking) {
+    return (
+      <main className="page login-screen">
+        <section className="login-card loading-card">
+          <p>Resto POS</p>
+          <h1>Oturum dogrulaniyor</h1>
+          <span>Yerel kasa oturumu kontrol ediliyor...</span>
+        </section>
+      </main>
+    );
+  }
+
+  if (!auth) {
+    return (
+      <main className="page login-screen">
+        <section className="login-card">
+          <p>Resto POS</p>
+          <h1>Kasa Girisi</h1>
+          <span>Satis ekranina gecmek icin yetkili kullanici ile oturum ac.</span>
+          {loginError ? <div className="error">{loginError}</div> : null}
+          <form
+            className="login-form"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void handleLogin();
+            }}
+          >
+            <label className="login-field">
+              <span>E-posta</span>
+              <input
+                className="login-input"
+                type="email"
+                autoComplete="username"
+                value={loginEmail}
+                onChange={(event) => setLoginEmail(event.target.value)}
+                disabled={loginBusy}
+              />
+            </label>
+            <label className="login-field">
+              <span>Sifre</span>
+              <input
+                className="login-input"
+                type="password"
+                autoComplete="current-password"
+                value={loginPassword}
+                onChange={(event) => setLoginPassword(event.target.value)}
+                disabled={loginBusy}
+              />
+            </label>
+            <button className="primary login-submit" type="submit" disabled={loginBusy}>
+              {loginBusy ? "Giris yapiliyor..." : "Giris Yap"}
+            </button>
+          </form>
+          <div className="login-note">
+            <strong>Varsayilan hesap</strong>
+            <span>admin@resto.local / Admin123!</span>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
   return (
     <main className="page simpra-shell">
       <header className="hero simpra-hero">
@@ -502,13 +732,23 @@ export default function App() {
           <h1>Salon Satis Ekrani</h1>
           <span>Masalar, adisyon ve hizli urun akisi tek ekranda</span>
         </div>
-        <button
-          className="primary top-refresh"
-          disabled={busy}
-          onClick={() => void load(true)}
-        >
-          Yenile
-        </button>
+        <div className="hero-actions">
+          <div className="session-chip">
+            <small>{currentUserRole}</small>
+            <strong>{currentUserName}</strong>
+            <span>{auth.user.email}</span>
+          </div>
+          <button
+            className="primary top-refresh"
+            disabled={busy}
+            onClick={() => void load(true)}
+          >
+            Yenile
+          </button>
+          <button className="secondary top-refresh" type="button" onClick={handleLogout}>
+            Cikis
+          </button>
+        </div>
       </header>
       {notice ? <div className="notice">{notice}</div> : null}
       {error ? <div className="error">{error}</div> : null}
