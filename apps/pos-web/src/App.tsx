@@ -40,6 +40,15 @@ type Order = {
   items: OrderItem[];
   payments?: Payment[];
 };
+type Customer = {
+  id: string;
+  code: string;
+  fullName: string;
+  phone?: string | null;
+  email?: string | null;
+  note?: string | null;
+  loyaltyPoints: number;
+};
 type AuthRole = { id: string; code: string; name: string };
 type AuthPermission = { id: string; code: string; name: string };
 type AuthUser = {
@@ -162,6 +171,13 @@ export default function App() {
   const [loginPassword, setLoginPassword] = useState("Admin123!");
   const [loginBusy, setLoginBusy] = useState(false);
   const [loginError, setLoginError] = useState("");
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
+  const [customerSearch, setCustomerSearch] = useState("");
+  const [newCustomerName, setNewCustomerName] = useState("");
+  const [newCustomerPhone, setNewCustomerPhone] = useState("");
+  const [newCustomerEmail, setNewCustomerEmail] = useState("");
+  const [newCustomerNote, setNewCustomerNote] = useState("");
 
   const loadOperationalData = async () => {
     const [kitchenData, ordersData] = await Promise.all([
@@ -173,17 +189,24 @@ export default function App() {
   };
 
   const load = async (includeOperational = false) => {
-    const [tablesData, productsData, salesData, sessionsData] =
+    const [tablesData, productsData, salesData, sessionsData, customersData] =
       await Promise.all([
         get<Table[]>("/dining/tables"),
         get<Product[]>("/catalog/products"),
         get<Sales>("/orders/sales-summary"),
         get<Session[]>("/dining/sessions"),
+        get<Customer[]>("/customers"),
       ]);
     setTables(tablesData);
     setProducts(productsData);
     setSales(salesData);
     setSessions(sessionsData);
+    setCustomers(customersData);
+    setSelectedCustomerId((current) =>
+      current && customersData.some((customer) => customer.id === current)
+        ? current
+        : customersData[0]?.id ?? null,
+    );
     setSelectedTableId((current) => current ?? tablesData[0]?.id ?? null);
 
     const operationalTask = loadOperationalData();
@@ -268,6 +291,23 @@ export default function App() {
     () => tables.filter((table) => table.status === "OCCUPIED").length,
     [tables],
   );
+  const selectedCustomer = useMemo(
+    () => customers.find((customer) => customer.id === selectedCustomerId) ?? null,
+    [customers, selectedCustomerId],
+  );
+  const filteredCustomers = useMemo(() => {
+    const query = customerSearch.trim().toLowerCase();
+    if (!query) return customers.slice(0, 8);
+
+    return customers
+      .filter((customer) =>
+        [customer.fullName, customer.phone ?? "", customer.email ?? ""]
+          .join(" ")
+          .toLowerCase()
+          .includes(query),
+      )
+      .slice(0, 8);
+  }, [customerSearch, customers]);
   const openOrderCount = sales?.openOrderCount ?? 0;
   const grossSalesLabel = money.format(sales?.grossSales ?? 0);
   const paidTotal = openOrder?.paidTotal ?? 0;
@@ -496,7 +536,10 @@ export default function App() {
     setSales(null);
     setSessions([]);
     setOrders([]);
+    setCustomers([]);
     setSelectedTableId(null);
+    setSelectedCustomerId(null);
+    setCustomerSearch("");
     setNotice("");
     setError("");
   };
@@ -656,6 +699,33 @@ export default function App() {
         note: "POS ekranindan kapatildi",
       });
       setNotice("Adisyon kapatildi");
+    });
+  };
+
+  const createCustomerCode = () =>
+    "CUS-" + Math.random().toString(36).slice(2, 8).toUpperCase();
+
+  const createCustomer = async () => {
+    if (!newCustomerName.trim()) {
+      setError("Musteri adi gerekli");
+      return;
+    }
+
+    await runAction(async () => {
+      const created = await post<Customer>("/customers", {
+        code: createCustomerCode(),
+        fullName: newCustomerName.trim(),
+        phone: newCustomerPhone.trim() || undefined,
+        email: newCustomerEmail.trim() || undefined,
+        note: newCustomerNote.trim() || undefined,
+      });
+      setSelectedCustomerId(created.id);
+      setCustomerSearch(created.fullName);
+      setNewCustomerName("");
+      setNewCustomerPhone("");
+      setNewCustomerEmail("");
+      setNewCustomerNote("");
+      setNotice("Musteri kaydedildi: " + created.fullName);
     });
   };
 
@@ -837,14 +907,136 @@ export default function App() {
             </div>
           </div>
           {salesMode === "package" ? (
-            <div className="package-mode-grid">
-              <div className="package-card selected"><b>Musteri</b><span>Misafir Musteri</span><small>Hizli kayit acik</small></div>
-              <div className="package-card"><b>Telefon</b><span>+90 555 000 00 00</span><small>Son siparis 2 gun once</small></div>
-              <div className="package-card wide"><b>Adres</b><span>Atasehir / Istanbul, Barbaros Mah. Mor Sumbul Sk.</span><small>Site girisi B blok, zil 14</small></div>
-              <div className="package-card"><b>Teslimat</b><span>35 dk hedef sure</span><small>Hazirlaniyor</small></div>
-              <div className="package-card"><b>Kurye</b><span>Motor 03</span><small>Bolge Atasehir merkez</small></div>
-              <div className="package-card"><b>Kanal</b><span>Kurye / Gel-Al</span><small>Online odeme destekli</small></div>
-            </div>
+            <>
+              <div className="package-mode-grid">
+                <div className="package-card selected">
+                  <b>Musteri</b>
+                  <span>{selectedCustomer?.fullName ?? "Misafir Musteri"}</span>
+                  <small>
+                    {selectedCustomer
+                      ? `${selectedCustomer.loyaltyPoints} puan`
+                      : "Hizli kayit acik"}
+                  </small>
+                </div>
+                <div className="package-card">
+                  <b>Telefon</b>
+                  <span>{selectedCustomer?.phone || "Telefon eklenmedi"}</span>
+                  <small>
+                    {selectedCustomer?.email || "E-posta bilgisi yok"}
+                  </small>
+                </div>
+                <div className="package-card wide">
+                  <b>Not / Adres</b>
+                  <span>{selectedCustomer?.note || "Adres ya da teslimat notu eklenmedi"}</span>
+                  <small>
+                    {selectedCustomer ? selectedCustomer.code : "Misafir siparisi"}
+                  </small>
+                </div>
+                <div className="package-card">
+                  <b>Teslimat</b>
+                  <span>35 dk hedef sure</span>
+                  <small>
+                    {selectedCustomer ? "Musteri secimi tamamlandi" : "Musteri secimi bekleniyor"}
+                  </small>
+                </div>
+                <div className="package-card">
+                  <b>Kurye</b>
+                  <span>Motor 03</span>
+                  <small>Bolge Atasehir merkez</small>
+                </div>
+                <div className="package-card">
+                  <b>Kanal</b>
+                  <span>Kurye / Gel-Al</span>
+                  <small>{customers.length} kayitli musteri</small>
+                </div>
+              </div>
+              <div className="package-customer-panel">
+                <div className="package-customer-head">
+                  <div>
+                    <strong>Musteri Secimi</strong>
+                    <span>Paket siparis icin var olan musteri sec veya hizli kayit ac.</span>
+                  </div>
+                </div>
+                <div className="package-customer-search">
+                  <input
+                    className="package-input"
+                    type="text"
+                    placeholder="Musteri, telefon ya da e-posta ara"
+                    value={customerSearch}
+                    onChange={(event) => setCustomerSearch(event.target.value)}
+                  />
+                </div>
+                <div className="customer-list">
+                  <button
+                    type="button"
+                    className={selectedCustomerId === null ? "customer-chip active" : "customer-chip"}
+                    onClick={() => setSelectedCustomerId(null)}
+                  >
+                    <strong>Misafir Musteri</strong>
+                    <span>Kayit secmeden devam et</span>
+                  </button>
+                  {filteredCustomers.map((customer) => (
+                    <button
+                      key={customer.id}
+                      type="button"
+                      className={
+                        selectedCustomerId === customer.id
+                          ? "customer-chip active"
+                          : "customer-chip"
+                      }
+                      onClick={() => setSelectedCustomerId(customer.id)}
+                    >
+                      <strong>{customer.fullName}</strong>
+                      <span>{customer.phone || customer.email || customer.code}</span>
+                    </button>
+                  ))}
+                </div>
+                <div className="package-customer-form">
+                  <div className="package-form-head">
+                    <strong>Hizli Musteri Kaydi</strong>
+                    <span>Telefon, e-posta ve teslimat notu ile yeni kayit olustur.</span>
+                  </div>
+                  <div className="package-form-grid">
+                    <input
+                      className="package-input"
+                      type="text"
+                      placeholder="Ad Soyad"
+                      value={newCustomerName}
+                      onChange={(event) => setNewCustomerName(event.target.value)}
+                    />
+                    <input
+                      className="package-input"
+                      type="text"
+                      placeholder="Telefon"
+                      value={newCustomerPhone}
+                      onChange={(event) => setNewCustomerPhone(event.target.value)}
+                    />
+                    <input
+                      className="package-input"
+                      type="email"
+                      placeholder="E-posta"
+                      value={newCustomerEmail}
+                      onChange={(event) => setNewCustomerEmail(event.target.value)}
+                    />
+                    <input
+                      className="package-input"
+                      type="text"
+                      placeholder="Adres veya teslimat notu"
+                      value={newCustomerNote}
+                      onChange={(event) => setNewCustomerNote(event.target.value)}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    className="payment-button pale package-create-button"
+                    disabled={busy}
+                    onClick={() => void createCustomer()}
+                  >
+                    Musteri Olustur
+                  </button>
+                </div>
+              </div>
+            </>
           ) : null}
           <div className="payment-panel-head">
             <div>
