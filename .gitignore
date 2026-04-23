@@ -26,3 +26,4 @@ coverage/
 .turbo/
 .vscode/
 .local/
+apps/*/.embedded-api/

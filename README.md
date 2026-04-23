@@ -51,7 +51,7 @@ pnpm dist:device-agent:win:x64
 pnpm dist:pos:mac
 ```
 
-Desktop uygulamasi `apps/pos-web/release/mac/` altina cikar. Gelistirme modunda masaustu acmak icin:
+Desktop uygulamasi `apps/pos-web/release/mac/` altina cikar. Uygulama acilirken yerel API'yi otomatik baslatmayi dener. Bunun icin yalnizca Docker ve `resto-pos-db` veritabani hazir olmalidir. Gelistirme modunda masaustu acmak icin:
 
 ```bash
 pnpm dev:pos-desktop

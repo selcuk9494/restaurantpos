@@ -5,19 +5,35 @@
   "type": "module",
   "scripts": {
     "dev": "concurrently -k \"pnpm:dev:web\" \"pnpm:dev:electron\"",
-    "build": "pnpm run build:renderer && pnpm run build:electron",
+    "build": "pnpm run build:renderer && pnpm run build:electron && pnpm run build:api && pnpm run build:embedded-api",
     "typecheck": "tsc -b && tsc -p tsconfig.electron.json --noEmit",
     "dev:web": "vite --host 0.0.0.0 --port 4173",
-    "dev:electron": "tsc -p tsconfig.electron.json && wait-on tcp:4173 && VITE_DEV_SERVER_URL=http://127.0.0.1:4173 electron .",
+    "dev:electron": "pnpm run build:api && tsc -p tsconfig.electron.json && wait-on tcp:4173 && VITE_DEV_SERVER_URL=http://127.0.0.1:4173 electron .",
     "build:renderer": "tsc -b && vite build",
     "build:electron": "tsc -p tsconfig.electron.json",
     "start": "electron .",
     "dist:mac": "pnpm run build && electron-builder --mac zip --arm64 --config.mac.identity=null --config.directories.output=release/mac",
-    "dist:mac:dir": "pnpm run build && electron-builder --mac dir --arm64 --config.mac.identity=null --config.directories.output=release/mac-dir"
+    "dist:mac:dir": "pnpm run build && electron-builder --mac dir --arm64 --config.mac.identity=null --config.directories.output=release/mac-dir",
+    "build:api": "pnpm --dir ../../services/api build",
+    "build:embedded-api": "node -e \"require('node:fs').rmSync('.embedded-api', { recursive: true, force: true })\" && pnpm --dir ../.. --filter @resto/api deploy --prod apps/pos-web/.embedded-api && node scripts/sync-embedded-prisma.cjs"
   },
   "dependencies": {
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "@nestjs/common": "^11.1.19",
+    "@nestjs/config": "^4.0.4",
+    "@nestjs/core": "^11.1.19",
+    "@nestjs/jwt": "^11.0.2",
+    "@nestjs/passport": "^11.0.5",
+    "@nestjs/platform-express": "^11.1.19",
+    "@prisma/client": "^6.16.3",
+    "bcrypt": "^6.0.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.15.1",
+    "passport": "^0.7.0",
+    "passport-jwt": "^4.0.1",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2"
   },
   "devDependencies": {
     "@types/node": "^25.6.0",
@@ -52,7 +68,13 @@
       "hardenedRuntime": false,
       "gatekeeperAssess": false,
       "icon": "../device-agent/build-resources/icon.icns"
-    }
+    },
+    "extraResources": [
+      {
+        "from": ".embedded-api",
+        "to": "embedded-api"
+      }
+    ]
   },
   "description": "Resto Platform POS masaustu uygulamasi",
   "author": "Selcuk Yilmaz"
