@@ -25,3 +25,4 @@ services/api/src/generated/prisma/
 coverage/
 .turbo/
 .vscode/
+.local/
