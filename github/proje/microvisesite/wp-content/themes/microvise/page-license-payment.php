@@ -19,7 +19,7 @@ $api_url = 'https://frfood-backend.onrender.com/api/payment/license-hosted/pay';
 <?php wp_head(); ?>
 <style>
 body{margin:0;background:linear-gradient(180deg,#eff6ff 0%,#f8fafc 100%);font-family:Arial,sans-serif;color:#0f172a}
-.wrap{max-width:860px;margin:12px auto;padding:0 12px}
+.wrap{max-width:800px;margin:10px auto;padding:0 10px}
 .card{background:#fff;border:1px solid #dbe4f0;border-radius:22px;overflow:hidden;box-shadow:0 16px 40px rgba(15,23,42,.10)}
 .hero{padding:16px 18px;background:linear-gradient(135deg,#0d6efd 0%,#1d4ed8 55%,#0f3d91 100%);color:#fff}
 .hero h1{margin:0 0 4px;font-size:26px;line-height:1.1}
@@ -38,42 +38,42 @@ body{margin:0;background:linear-gradient(180deg,#eff6ff 0%,#f8fafc 100%);font-fa
 .detail-box{background:rgba(255,255,255,.7);border:1px solid rgba(148,163,184,.22);border-radius:12px;padding:12px}
 .detail-label{display:block;font-size:11px;color:#64748b;margin-bottom:4px}
 .detail-value{font-size:16px;font-weight:700;word-break:break-word}
-.summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:12px}
-.box{background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:12px}
+.summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:10px}
+.box{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:10px}
 .label{display:block;font-size:11px;color:#64748b;margin-bottom:4px}
-.value{font-size:18px;font-weight:800;line-height:1.2}
-.helper{margin:0 0 10px;color:#64748b;font-size:13px}
+.value{font-size:17px;font-weight:800;line-height:1.2}
+.helper{margin:0 0 8px;color:#64748b;font-size:12px}
 .payment-shell{display:grid;grid-template-columns:1fr;gap:0}
-.payment-form-card{background:#fff;border:1px solid #e2e8f0;border-radius:18px;box-shadow:0 10px 24px rgba(15,23,42,.05);padding:14px}
-.card-preview-row{display:grid;grid-template-columns:minmax(0,1fr) 180px;gap:12px;margin-bottom:14px}
-.bank-card{position:relative;min-height:142px;border-radius:18px;padding:16px;background:linear-gradient(135deg,#111827 0%,#1d4ed8 60%,#2563eb 100%);color:#fff;overflow:hidden;box-shadow:0 14px 32px rgba(37,99,235,.24)}
-.bank-card:before{content:"";position:absolute;inset:auto -32px -48px auto;width:140px;height:140px;border-radius:999px;background:rgba(255,255,255,.10)}
-.bank-card:after{content:"";position:absolute;inset:14px auto auto 118px;width:86px;height:86px;border-radius:999px;background:rgba(255,255,255,.06)}
+.payment-form-card{background:#fff;border:1px solid #e2e8f0;border-radius:18px;box-shadow:0 10px 24px rgba(15,23,42,.05);padding:12px;overflow:hidden}
+.card-preview-row{display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:10px}
+.bank-card{position:relative;min-height:118px;border-radius:16px;padding:13px 14px;background:linear-gradient(135deg,#111827 0%,#1d4ed8 60%,#2563eb 100%);color:#fff;overflow:hidden;box-shadow:0 12px 28px rgba(37,99,235,.22)}
+.bank-card:before{content:"";position:absolute;inset:auto -28px -44px auto;width:120px;height:120px;border-radius:999px;background:rgba(255,255,255,.10)}
+.bank-card:after{content:"";position:absolute;inset:12px auto auto 108px;width:72px;height:72px;border-radius:999px;background:rgba(255,255,255,.06)}
 .bank-card-top,.bank-card-bottom{position:relative;z-index:1}
-.bank-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:18px}
-.bank-card-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.14);font-size:11px;font-weight:700;letter-spacing:.02em}
-.bank-card-chip{width:36px;height:24px;border-radius:7px;background:linear-gradient(135deg,#fde68a 0%,#f59e0b 100%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.28)}
-.bank-card-brand{font-size:12px;font-weight:700;color:rgba(255,255,255,.92)}
-.bank-card-number{margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:.08em}
+.bank-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:12px}
+.bank-card-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 8px;border-radius:999px;background:rgba(255,255,255,.14);font-size:10px;font-weight:700;letter-spacing:.02em}
+.bank-card-chip{width:30px;height:20px;border-radius:6px;background:linear-gradient(135deg,#fde68a 0%,#f59e0b 100%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.28)}
+.bank-card-brand{font-size:11px;font-weight:700;color:rgba(255,255,255,.92)}
+.bank-card-number{margin:0 0 10px;font-size:18px;font-weight:800;letter-spacing:.06em;word-break:break-word}
 .bank-card-meta{display:flex;justify-content:space-between;gap:10px}
-.bank-card-meta span{display:block;font-size:10px;color:rgba(255,255,255,.78);margin-bottom:4px;text-transform:uppercase;letter-spacing:.08em}
-.bank-card-meta strong{font-size:13px;font-weight:700}
-.side-box{padding:14px;border:1px solid #dbe4f0;border-radius:18px;background:linear-gradient(180deg,#f8fafc 0%,#eef4ff 100%)}
-.side-box .value{font-size:24px}
-.side-box p{margin:8px 0 0;font-size:12px;line-height:1.45;color:#64748b}
-.notice{padding:14px 16px;border-radius:14px;margin-bottom:14px;border:1px solid #fecaca;background:#fff1f2;color:#b91c1c}
-label{display:block;font-size:13px;font-weight:700;margin:0 0 5px}
-input{width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid #cbd5e1;border-radius:12px;font-size:14px;background:#fff}
+.bank-card-meta span{display:block;font-size:9px;color:rgba(255,255,255,.78);margin-bottom:3px;text-transform:uppercase;letter-spacing:.08em}
+.bank-card-meta strong{font-size:12px;font-weight:700}
+.side-box{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid #dbe4f0;border-radius:14px;background:linear-gradient(180deg,#f8fafc 0%,#eef4ff 100%)}
+.side-box .value{font-size:19px;white-space:nowrap}
+.side-box p{margin:0;font-size:11px;line-height:1.35;color:#64748b}
+.notice{padding:12px 14px;border-radius:12px;margin-bottom:12px;border:1px solid #fecaca;background:#fff1f2;color:#b91c1c}
+label{display:block;font-size:12px;font-weight:700;margin:0 0 4px}
+input{width:100%;box-sizing:border-box;padding:10px 11px;border:1px solid #cbd5e1;border-radius:11px;font-size:14px;background:#fff}
 input:focus{outline:none;border-color:#0d6efd;box-shadow:0 0 0 4px rgba(13,110,253,.12)}
-.grid{display:grid;gap:12px}
+.grid{display:grid;gap:10px}
 .two{grid-template-columns:repeat(2,minmax(0,1fr))}
-.actions{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:14px;padding-top:12px;border-top:1px solid #e2e8f0}
-.button{border:0;border-radius:999px;padding:12px 18px;font-size:14px;font-weight:700;cursor:pointer}
+.actions{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid #e2e8f0}
+.button{border:0;border-radius:999px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer}
 .primary{background:#dc2626;color:#fff}
 .secondary{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;background:#e0ecff;color:#1d4ed8}
 .secondary:hover,.primary:hover{filter:brightness(.97)}
-.muted{font-size:12px;color:#64748b;line-height:1.45}
-.loader{display:none;margin-top:10px;color:#1d4ed8;font-weight:700;font-size:13px}
+.muted{font-size:11px;color:#64748b;line-height:1.35}
+.loader{display:none;margin-top:8px;color:#1d4ed8;font-weight:700;font-size:12px}
 @media(max-width:640px){.summary,.detail-grid,.two,.card-preview-row{grid-template-columns:1fr}.actions{flex-direction:column;align-items:stretch}.hero h1{font-size:24px}.result-head{align-items:center}.bank-card-number{font-size:20px}.wrap{padding:0 8px}.body{padding:12px}.payment-form-card{padding:12px}}
 </style>
 </head>
@@ -178,7 +178,7 @@ input:focus{outline:none;border-color:#0d6efd;box-shadow:0 0 0 4px rgba(13,110,2
               <div class="side-box">
                 <span class="label">Toplam Odeme</span>
                 <div class="value"><?php echo esc_html($amount . ' ' . $currency); ?></div>
-                <p>Banka 3D onayi sonrasi sonuc bu ekranda gosterilir.</p>
+                <p>3D onay sonrasi sonuc burada gosterilir.</p>
               </div>
             </div>
             <div>
